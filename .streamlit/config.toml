@@ -1,0 +1,28 @@
+[theme]
+base = "light"
+primaryColor = "#0F766E"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F7F6"
+textColor = "#17212B"
+linkColor = "#0F766E"
+codeTextColor = "#14532D"
+codeBackgroundColor = "#ECFDF5"
+borderColor = "#CBD5D1"
+dataframeBorderColor = "#CBD5D1"
+dataframeHeaderBackgroundColor = "#E7F4F1"
+baseRadius = "8px"
+buttonRadius = "8px"
+showWidgetBorder = true
+showSidebarBorder = true
+font = "'IBM Plex Sans':https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
+headingFont = "'IBM Plex Sans':https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@600;700&display=swap"
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+chartCategoricalColors = ["#0F766E", "#2563EB", "#B45309", "#BE123C", "#4D7C0F", "#6D28D9", "#475569"]
+chartSequentialColors = ["#ECFDF5", "#CCFBF1", "#99F6E4", "#5EEAD4", "#2DD4BF", "#14B8A6", "#0D9488", "#0F766E", "#115E59", "#134E4A"]
+
+[theme.sidebar]
+backgroundColor = "#F8FAF9"
+secondaryBackgroundColor = "#E7F4F1"
+textColor = "#17212B"
+primaryColor = "#0F766E"
+borderColor = "#CBD5D1"

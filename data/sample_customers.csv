@@ -1,0 +1,11 @@
+customer_id,tenure_months,monthly_charges,contract,churn
+C-1001,18,72.50,Annual,0
+C-1002,4,91.20,Monthly,1
+C-1003,32,58.40,Annual,0
+C-1004,9,104.90,Monthly,1
+C-1005,25,66.00,Two year,0
+C-1006,3,119.00,Monthly,1
+C-1007,14,83.75,Monthly,0
+C-1008,48,49.99,Two year,0
+C-1009,7,76.25,Annual,1
+C-1010,28,101.10,Monthly,0
