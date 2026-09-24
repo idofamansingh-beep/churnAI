@@ -13,11 +13,12 @@
 - Budget planner and campaign plan exports
 - Dataset-aware Ask ChurnAI assistant
 - Theme configuration, helper scripts, deployment docs, CI, and tests
+- Real IBM Telco Customer Churn dataset (7,043 customers) loaded into SQLite with analytical SQL queries (`src/churn_db.py`)
+- Trained scikit-learn model (Logistic Regression vs. Random Forest, best model selected by ROC-AUC) with saved metrics and confusion matrix (`src/churn_model.py`)
 
 ## Recommended production next steps
 
-- Replace the heuristic score with a trained model using historical customer data.
-- Add model training, evaluation, and versioning workflows under `models/` and `reports/`.
+- Add model training, evaluation, and versioning workflows under `models/` and `reports/` (basic version done; add experiment tracking next).
 - Store uploaded data in a managed database or warehouse when multi-user persistence is needed.
 - Add authentication before exposing customer data outside local or private environments.
 - Add privacy review, retention policy, and PII handling rules for real customer datasets.
@@ -36,5 +37,5 @@ Expected result:
 
 ```text
 No broken requirements found.
-Ran 8 tests ... OK
+Ran 13 tests ... OK
 ```

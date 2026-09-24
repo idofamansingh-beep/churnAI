@@ -29,8 +29,19 @@ Expected result:
 
 ```text
 No broken requirements found.
-Ran 8 tests ... OK
+Ran 13 tests ... OK
 ```
+
+## Real data, SQL, and trained model (optional)
+
+For the "Real data & trained ML model" section to appear, run once after cloning:
+
+```powershell
+.\scripts\build_database.cmd
+.\scripts\train_model.cmd
+```
+
+This generates `data/churnai.db` and `models/churn_model.joblib`, both already committed in this repo so the section works out of the box. Re-run these scripts only if `data/telco_customer_churn_raw.csv` changes.
 
 ## Supported input schema
 

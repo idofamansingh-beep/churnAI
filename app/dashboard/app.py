@@ -1,5 +1,6 @@
 from io import BytesIO
 from pathlib import Path
+import json
 import sys
 
 import pandas as pd
@@ -10,6 +11,13 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 if str(ROOT_DIR) not in sys.path:
 	sys.path.insert(0, str(ROOT_DIR))
 
+from src.churn_db import (
+	churn_rate_by_contract,
+	churn_rate_by_internet_service,
+	revenue_at_risk_by_payment_method,
+	tenure_and_charges_by_churn,
+)
+from src.churn_model import load_model, predict_churn_probability
 from src.churnai_core import (
 	churn_rate,
 	estimate_churn_probability,
@@ -23,6 +31,11 @@ from src.churnai_core import (
 
 
 st.set_page_config(page_title="ChurnAI", page_icon="🤖", layout="wide")
+
+REAL_DATA_CSV = ROOT_DIR / "data" / "telco_customer_churn_raw.csv"
+REAL_DATABASE = ROOT_DIR / "data" / "churnai.db"
+MODEL_PATH = ROOT_DIR / "models" / "churn_model.joblib"
+MODEL_METRICS_PATH = ROOT_DIR / "reports" / "model_metrics.json"
 
 
 @st.cache_data
@@ -333,6 +346,33 @@ def answer_churn_question(question: str, priorities: pd.DataFrame | None, rate: 
 		return f"The detected churn rate is {rate:.1%}, and {len(high_risk):,} customers are currently estimated at high or critical risk."
 
 	return "Ask me about top risk customers, revenue at risk, customer counts, or churn rate."
+
+
+@st.cache_resource
+def load_real_model():
+	return load_model(MODEL_PATH.parent)
+
+
+@st.cache_data
+def load_model_metrics() -> dict | None:
+	if not MODEL_METRICS_PATH.exists():
+		return None
+	return json.loads(MODEL_METRICS_PATH.read_text())
+
+
+@st.cache_data
+def load_real_customer_data() -> pd.DataFrame:
+	return pd.read_csv(REAL_DATA_CSV)
+
+
+@st.cache_data
+def top_real_risk_customers(_pipeline, real_data: pd.DataFrame, top_n: int = 10) -> pd.DataFrame:
+	from src.churn_db import clean_raw_dataframe
+
+	cleaned = clean_raw_dataframe(real_data)
+	cleaned = cleaned.assign(predicted_churn_risk=predict_churn_probability(_pipeline, cleaned))
+	columns = ["customerID", "tenure", "MonthlyCharges", "Contract", "predicted_churn_risk"]
+	return cleaned[columns].sort_values("predicted_churn_risk", ascending=False).head(top_n)
 
 
 st.title("🤖 ChurnAI")
@@ -712,6 +752,80 @@ with st.container(border=True):
 		response = answer_churn_question(prompt, filtered_priorities, rate)
 		st.session_state.churnai_messages.append({"role": "assistant", "content": response})
 		st.rerun()
+
+with st.container(border=True):
+	st.subheader("Real data & trained ML model")
+	st.caption("Trained on the IBM Telco Customer Churn dataset (7,043 real customers) instead of the heuristic used above.")
+
+	if not MODEL_PATH.exists() or not REAL_DATABASE.exists():
+		st.info(
+			"Model or database not found. Run `.\\scripts\\build_database.cmd` then `.\\scripts\\train_model.cmd` "
+			"to generate `data/churnai.db` and `models/churn_model.joblib`."
+		)
+	else:
+		metrics = load_model_metrics()
+		if metrics is not None:
+			best_model_metrics = metrics["models"][metrics["best_model"]]
+			st.write(f"Best model: **{metrics['best_model'].replace('_', ' ').title()}**")
+			with st.container(horizontal=True):
+				st.metric("Accuracy", f"{best_model_metrics['accuracy']:.0%}", border=True)
+				st.metric("Precision", f"{best_model_metrics['precision']:.0%}", border=True)
+				st.metric("Recall", f"{best_model_metrics['recall']:.0%}", border=True)
+				st.metric("ROC-AUC", f"{best_model_metrics['roc_auc']:.0%}", border=True)
+
+		real_data = load_real_customer_data()
+		pipeline = load_real_model()
+
+		sql_left, sql_right = st.columns(2)
+		with sql_left:
+			st.write("**Churn rate by contract (SQL)**")
+			st.dataframe(
+				churn_rate_by_contract(REAL_DATABASE),
+				hide_index=True,
+				column_config={
+					"churn_rate": st.column_config.ProgressColumn("Churn rate", format="%.0f%%", min_value=0, max_value=1),
+					"monthly_revenue_at_risk": st.column_config.NumberColumn("Revenue at risk", format="$%.2f"),
+				},
+			)
+		with sql_right:
+			st.write("**Churn rate by internet service (SQL)**")
+			st.dataframe(
+				churn_rate_by_internet_service(REAL_DATABASE),
+				hide_index=True,
+				column_config={
+					"churn_rate": st.column_config.ProgressColumn("Churn rate", format="%.0f%%", min_value=0, max_value=1),
+				},
+			)
+
+		st.write("**Top 10 highest-risk real customers (model predictions)**")
+		st.dataframe(
+			top_real_risk_customers(pipeline, real_data),
+			hide_index=True,
+			column_config={
+				"MonthlyCharges": st.column_config.NumberColumn("Monthly charges", format="$%.2f"),
+				"predicted_churn_risk": st.column_config.ProgressColumn(
+					"Predicted churn risk", format="%.0f%%", min_value=0, max_value=1
+				),
+			},
+		)
+
+		sql_left_2, sql_right_2 = st.columns(2)
+		with sql_left_2:
+			st.write("**Tenure and charges by churn status (SQL)**")
+			st.dataframe(
+				tenure_and_charges_by_churn(REAL_DATABASE),
+				hide_index=True,
+				column_config={"avg_monthly_charges": st.column_config.NumberColumn("Avg monthly charges", format="$%.2f")},
+			)
+		with sql_right_2:
+			st.write("**Revenue at risk by payment method, churned customers only (SQL)**")
+			st.dataframe(
+				revenue_at_risk_by_payment_method(REAL_DATABASE),
+				hide_index=True,
+				column_config={
+					"monthly_revenue_at_risk": st.column_config.NumberColumn("Revenue at risk", format="$%.2f"),
+				},
+			)
 
 with st.container(border=True):
 	st.subheader("Customer data")
