@@ -34,6 +34,30 @@ class DashboardSmokeTest(unittest.TestCase):
 		self.assertEqual(0, result.returncode, result.stderr)
 		self.assertNotIn("ModuleNotFoundError", result.stderr)
 
+	def test_login_gate_is_skipped_without_configured_password(self) -> None:
+		app = AppTest.from_file(str(ROOT / "app" / "dashboard" / "app.py"))
+		app.run(timeout=10)
+
+		self.assertEqual([], [exception.value for exception in app.exception])
+		self.assertIn("🤖 ChurnAI", [title.value for title in app.title])
+
+	def test_login_gate_blocks_until_correct_password(self) -> None:
+		app = AppTest.from_file(str(ROOT / "app" / "dashboard" / "app.py"))
+		app.secrets["app_password"] = "letmein"
+		app.run(timeout=10)
+
+		self.assertIn("🔒 ChurnAI", [title.value for title in app.title])
+
+		app.text_input[0].input("wrong-password")
+		app.button[0].click().run()
+		self.assertIn("🔒 ChurnAI", [title.value for title in app.title])
+		self.assertIn("Incorrect password.", [error.value for error in app.error])
+
+		app.text_input[0].input("letmein")
+		app.button[0].click().run()
+		self.assertEqual([], [exception.value for exception in app.exception])
+		self.assertIn("🤖 ChurnAI", [title.value for title in app.title])
+
 	def test_sample_csv_has_required_columns(self) -> None:
 		data = pd.read_csv(ROOT / "data" / "sample_customers.csv")
 		required_columns = {"customer_id", "tenure_months", "monthly_charges", "contract", "churn"}

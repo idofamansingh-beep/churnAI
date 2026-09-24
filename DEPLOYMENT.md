@@ -7,9 +7,19 @@ Use these settings when deploying from a Git repository:
 - Main file path: `app/dashboard/app.py`
 - Python version: 3.11 or newer
 - Dependencies file: `requirements.txt`
-- Secrets: none required for the current prototype
+- Secrets: optional `app_password` (see below); the app runs without any secrets configured
 
 After deployment, open the app and upload `data/sample_customers.csv` to verify the full workflow.
+
+## Optional authentication
+
+To require a password before the dashboard is visible, add this to `.streamlit/secrets.toml` (or the platform's secrets manager):
+
+```toml
+app_password = "your-chosen-password"
+```
+
+If `app_password` is not set, the dashboard skips the login gate entirely, which keeps local development frictionless.
 
 ## Local production-style run
 
@@ -29,7 +39,7 @@ Expected result:
 
 ```text
 No broken requirements found.
-Ran 17 tests ... OK
+Ran 19 tests ... OK
 ```
 
 ## Real data, SQL, and trained model (optional)

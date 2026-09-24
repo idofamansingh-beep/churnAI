@@ -18,11 +18,11 @@
 - Experiment tracking log (`reports/experiment_log.csv`) appending accuracy/precision/recall/F1/ROC-AUC per candidate model on every training run
 - Feature importance / model explainability (`reports/feature_importance.csv`, shown as a chart in the dashboard) ranking which factors drive churn most
 - Scheduled retraining with a quality gate (`.github/workflows/retrain.yml`, `scripts/check_model_quality.py`) that rebuilds the database, retrains the model, blocks on ROC-AUC regression, and commits updated artifacts
+- Opt-in password authentication (`st.secrets["app_password"]`) that gates the dashboard when configured, with no friction for local/dev runs
 
 ## Recommended production next steps
 
 - Store uploaded data in a managed database or warehouse when multi-user persistence is needed.
-- Add authentication before exposing customer data outside local or private environments.
 - Add privacy review, retention policy, and PII handling rules for real customer datasets.
 - Add richer monitoring for model drift, false positives, false negatives, and campaign outcomes.
 - Add browser-based visual regression checks for the Streamlit UI before public releases.
@@ -39,5 +39,5 @@ Expected result:
 
 ```text
 No broken requirements found.
-Ran 17 tests ... OK
+Ran 19 tests ... OK
 ```

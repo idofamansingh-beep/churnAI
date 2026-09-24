@@ -91,3 +91,4 @@ Model training and evaluation logic lives in `src/churn_model.py`; SQL queries l
 - Score backtesting with threshold comparison
 - Retention campaign plan export
 - Dataset-aware Ask ChurnAI assistant
+- Optional password authentication (see [DEPLOYMENT.md](DEPLOYMENT.md))

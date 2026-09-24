@@ -383,6 +383,33 @@ def top_real_risk_customers(_pipeline, real_data: pd.DataFrame, top_n: int = 10)
 	return cleaned[columns].sort_values("predicted_churn_risk", ascending=False).head(top_n)
 
 
+def configured_app_password() -> str | None:
+	# Auth is opt-in: no app_password secret means local/dev runs stay frictionless.
+	try:
+		return st.secrets.get("app_password")
+	except Exception:
+		return None
+
+
+def require_login() -> None:
+	expected_password = configured_app_password()
+	if not expected_password or st.session_state.get("authenticated", False):
+		return
+
+	st.title("🔒 ChurnAI")
+	st.write("Enter the access password to continue.")
+	password = st.text_input("Password", type="password")
+	if st.button("Log in"):
+		if password == expected_password:
+			st.session_state["authenticated"] = True
+			st.rerun()
+		else:
+			st.error("Incorrect password.")
+	st.stop()
+
+
+require_login()
+
 st.title("🤖 ChurnAI")
 st.caption("Customer churn dashboard")
 
