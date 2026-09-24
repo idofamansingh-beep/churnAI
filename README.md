@@ -77,6 +77,8 @@ After running both, the dashboard's "Real data & trained ML model" section shows
 
 Model training and evaluation logic lives in `src/churn_model.py`; SQL queries live in `src/churn_db.py`.
 
+`.github/workflows/retrain.yml` runs weekly (and on manual dispatch): it rebuilds the database, retrains the model, blocks the job if ROC-AUC drops below 0.75 (`scripts/check_model_quality.py`), and commits updated model/report artifacts back to the repo.
+
 ## Current features
 
 - Sample CSV download

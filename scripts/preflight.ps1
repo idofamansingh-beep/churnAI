@@ -13,6 +13,7 @@ Set-Location $repoRoot
     ".\app\aap.py" `
     ".\scripts\build_database.py" `
     ".\scripts\train_model.py" `
+    ".\scripts\check_model_quality.py" `
     ".\tests\test_churnai_core.py" `
     ".\tests\test_churn_db.py" `
     ".\tests\test_churn_model.py" `

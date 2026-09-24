@@ -162,6 +162,15 @@ def train_and_save(csv_path: Path, models_dir: Path, reports_dir: Path, random_s
 	return metrics_report
 
 
+def passes_quality_gate(metrics_report: dict, min_roc_auc: float = 0.75) -> tuple[bool, str]:
+	"""Check whether the best trained model clears the minimum acceptable ROC-AUC before deployment."""
+	best_metrics = metrics_report["models"][metrics_report["best_model"]]
+	roc_auc = best_metrics["roc_auc"]
+	if roc_auc < min_roc_auc:
+		return False, f"{metrics_report['best_model']} ROC-AUC {roc_auc:.4f} is below the {min_roc_auc:.2f} threshold"
+	return True, f"{metrics_report['best_model']} ROC-AUC {roc_auc:.4f} meets the {min_roc_auc:.2f} threshold"
+
+
 def load_model(models_dir: Path) -> Pipeline:
 	return joblib.load(models_dir / "churn_model.joblib")
 

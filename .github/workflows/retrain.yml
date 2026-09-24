@@ -1,0 +1,42 @@
+name: Retrain model
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Rebuild database
+        run: python scripts/build_database.py
+
+      - name: Retrain model
+        run: python scripts/train_model.py
+
+      - name: Enforce quality gate
+        run: python scripts/check_model_quality.py
+
+      - name: Commit updated model artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/churnai.db models/ reports/
+          git diff --staged --quiet || git commit -m "Retrain churn model [automated]"
+          git push

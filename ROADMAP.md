@@ -17,6 +17,7 @@
 - Trained scikit-learn model (Logistic Regression vs. Random Forest, best model selected by ROC-AUC) with saved metrics and confusion matrix (`src/churn_model.py`)
 - Experiment tracking log (`reports/experiment_log.csv`) appending accuracy/precision/recall/F1/ROC-AUC per candidate model on every training run
 - Feature importance / model explainability (`reports/feature_importance.csv`, shown as a chart in the dashboard) ranking which factors drive churn most
+- Scheduled retraining with a quality gate (`.github/workflows/retrain.yml`, `scripts/check_model_quality.py`) that rebuilds the database, retrains the model, blocks on ROC-AUC regression, and commits updated artifacts
 
 ## Recommended production next steps
 
@@ -38,5 +39,5 @@ Expected result:
 
 ```text
 No broken requirements found.
-Ran 15 tests ... OK
+Ran 17 tests ... OK
 ```

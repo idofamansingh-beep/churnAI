@@ -8,6 +8,7 @@ import pandas as pd
 from src.churn_model import (
 	extract_feature_importance,
 	load_features_and_target,
+	passes_quality_gate,
 	predict_churn_probability,
 	train_and_save,
 )
@@ -105,6 +106,22 @@ class ChurnModelTest(unittest.TestCase):
 			self.assertIn("tenure", importance["feature"].values)
 			self.assertTrue((importance["importance"] >= 0).all())
 			self.assertTrue(importance["importance"].is_monotonic_decreasing)
+
+	def test_passes_quality_gate_accepts_metrics_above_threshold(self) -> None:
+		metrics_report = {"best_model": "logistic_regression", "models": {"logistic_regression": {"roc_auc": 0.84}}}
+
+		passed, message = passes_quality_gate(metrics_report, min_roc_auc=0.75)
+
+		self.assertTrue(passed)
+		self.assertIn("0.8400", message)
+
+	def test_passes_quality_gate_rejects_metrics_below_threshold(self) -> None:
+		metrics_report = {"best_model": "logistic_regression", "models": {"logistic_regression": {"roc_auc": 0.60}}}
+
+		passed, message = passes_quality_gate(metrics_report, min_roc_auc=0.75)
+
+		self.assertFalse(passed)
+		self.assertIn("below", message)
 
 	def test_repeated_training_appends_to_experiment_log(self) -> None:
 		with TemporaryDirectory() as tmp_dir:
