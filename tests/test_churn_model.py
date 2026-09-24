@@ -5,7 +5,12 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from src.churn_model import load_features_and_target, predict_churn_probability, train_and_save
+from src.churn_model import (
+	extract_feature_importance,
+	load_features_and_target,
+	predict_churn_probability,
+	train_and_save,
+)
 
 CONTRACTS = ["Month-to-month", "One year", "Two year"]
 INTERNET_SERVICES = ["DSL", "Fiber optic", "No"]
@@ -78,9 +83,28 @@ class ChurnModelTest(unittest.TestCase):
 			self.assertTrue((reports_dir / "model_metrics.json").exists())
 			self.assertTrue((reports_dir / "confusion_matrix.csv").exists())
 			self.assertTrue((reports_dir / "experiment_log.csv").exists())
+			self.assertTrue((reports_dir / "feature_importance.csv").exists())
 			for metrics in report["models"].values():
 				self.assertGreaterEqual(metrics["roc_auc"], 0.0)
 				self.assertLessEqual(metrics["roc_auc"], 1.0)
+
+	def test_extract_feature_importance_ranks_all_features(self) -> None:
+		with TemporaryDirectory() as tmp_dir:
+			tmp_path = Path(tmp_dir)
+			csv_path = tmp_path / "raw.csv"
+			models_dir = tmp_path / "models"
+			reports_dir = tmp_path / "reports"
+			_make_synthetic_telco_csv(csv_path, rows=120)
+			train_and_save(csv_path, models_dir, reports_dir)
+
+			from src.churn_model import load_model
+
+			pipeline = load_model(models_dir)
+			importance = extract_feature_importance(pipeline)
+
+			self.assertIn("tenure", importance["feature"].values)
+			self.assertTrue((importance["importance"] >= 0).all())
+			self.assertTrue(importance["importance"].is_monotonic_decreasing)
 
 	def test_repeated_training_appends_to_experiment_log(self) -> None:
 		with TemporaryDirectory() as tmp_dir:

@@ -74,6 +74,25 @@ def evaluate(pipeline: Pipeline, features_test: pd.DataFrame, target_test: pd.Se
 	}
 
 
+def extract_feature_importance(pipeline: Pipeline) -> pd.DataFrame:
+	"""Rank features by how strongly they drive the trained classifier's predictions."""
+	preprocessor: ColumnTransformer = pipeline.named_steps["preprocessor"]
+	feature_names = [name.split("__", 1)[-1] for name in preprocessor.get_feature_names_out()]
+	classifier = pipeline.named_steps["classifier"]
+
+	if hasattr(classifier, "feature_importances_"):
+		importance = classifier.feature_importances_
+	else:
+		# Coefficients act on standardized/encoded inputs, so magnitude reflects relative influence.
+		importance = abs(classifier.coef_[0])
+
+	return (
+		pd.DataFrame({"feature": feature_names, "importance": importance})
+		.sort_values("importance", ascending=False)
+		.reset_index(drop=True)
+	)
+
+
 def log_experiment(reports_dir: Path, metrics_report: dict) -> Path:
 	"""Append a timestamped row per candidate model so training runs stay comparable over time."""
 	log_path = reports_dir / "experiment_log.csv"
@@ -128,6 +147,8 @@ def train_and_save(csv_path: Path, models_dir: Path, reports_dir: Path, random_s
 		index=["actual_retained", "actual_churned"],
 		columns=["predicted_retained", "predicted_churned"],
 	).to_csv(reports_dir / "confusion_matrix.csv")
+
+	extract_feature_importance(best_pipeline).to_csv(reports_dir / "feature_importance.csv", index=False)
 
 	metrics_report = {
 		"best_model": best_name,

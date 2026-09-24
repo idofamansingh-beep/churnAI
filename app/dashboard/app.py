@@ -36,6 +36,7 @@ REAL_DATA_CSV = ROOT_DIR / "data" / "telco_customer_churn_raw.csv"
 REAL_DATABASE = ROOT_DIR / "data" / "churnai.db"
 MODEL_PATH = ROOT_DIR / "models" / "churn_model.joblib"
 MODEL_METRICS_PATH = ROOT_DIR / "reports" / "model_metrics.json"
+FEATURE_IMPORTANCE_PATH = ROOT_DIR / "reports" / "feature_importance.csv"
 
 
 @st.cache_data
@@ -358,6 +359,13 @@ def load_model_metrics() -> dict | None:
 	if not MODEL_METRICS_PATH.exists():
 		return None
 	return json.loads(MODEL_METRICS_PATH.read_text())
+
+
+@st.cache_data
+def load_feature_importance() -> pd.DataFrame | None:
+	if not FEATURE_IMPORTANCE_PATH.exists():
+		return None
+	return pd.read_csv(FEATURE_IMPORTANCE_PATH)
 
 
 @st.cache_data
@@ -773,9 +781,17 @@ with st.container(border=True):
 				st.metric("Recall", f"{best_model_metrics['recall']:.0%}", border=True)
 				st.metric("ROC-AUC", f"{best_model_metrics['roc_auc']:.0%}", border=True)
 
+		feature_importance = load_feature_importance()
+		if feature_importance is not None:
+			st.write("**Top churn drivers (feature importance)**")
+			st.bar_chart(
+				feature_importance.head(10).set_index("feature"),
+				horizontal=True,
+				y_label="Relative importance",
+			)
+
 		real_data = load_real_customer_data()
 		pipeline = load_real_model()
-
 		sql_left, sql_right = st.columns(2)
 		with sql_left:
 			st.write("**Churn rate by contract (SQL)**")

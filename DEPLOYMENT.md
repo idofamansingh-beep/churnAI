@@ -29,7 +29,7 @@ Expected result:
 
 ```text
 No broken requirements found.
-Ran 14 tests ... OK
+Ran 15 tests ... OK
 ```
 
 ## Real data, SQL, and trained model (optional)

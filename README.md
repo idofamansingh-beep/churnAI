@@ -70,6 +70,7 @@ The dashboard's built-in heuristic works on any small CSV, but the project also 
 After running both, the dashboard's "Real data & trained ML model" section shows:
 
 - model accuracy, precision, recall, and ROC-AUC from `reports/model_metrics.json`
+- top churn drivers (feature importance) from `reports/feature_importance.csv`
 - SQL-derived churn rate by contract type and internet service (`src/churn_db.py`)
 - SQL-derived revenue at risk by payment method for churned customers
 - the top 10 highest-risk real customers scored by the trained model
