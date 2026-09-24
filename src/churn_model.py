@@ -1,6 +1,7 @@
 """Training, evaluation, and inference for the real Telco churn prediction model."""
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import joblib
@@ -73,6 +74,28 @@ def evaluate(pipeline: Pipeline, features_test: pd.DataFrame, target_test: pd.Se
 	}
 
 
+def log_experiment(reports_dir: Path, metrics_report: dict) -> Path:
+	"""Append a timestamped row per candidate model so training runs stay comparable over time."""
+	log_path = reports_dir / "experiment_log.csv"
+	timestamp = datetime.now(timezone.utc).isoformat()
+	rows = [
+		{
+			"timestamp": timestamp,
+			"model": name,
+			"is_best": name == metrics_report["best_model"],
+			"training_rows": metrics_report["training_rows"],
+			"test_rows": metrics_report["test_rows"],
+			**metrics,
+		}
+		for name, metrics in metrics_report["models"].items()
+	]
+	new_entries = pd.DataFrame(rows)
+	if log_path.exists():
+		new_entries = pd.concat([pd.read_csv(log_path), new_entries], ignore_index=True)
+	new_entries.to_csv(log_path, index=False)
+	return log_path
+
+
 def train_and_save(csv_path: Path, models_dir: Path, reports_dir: Path, random_state: int = 42) -> dict:
 	"""Train candidate models, keep the best by ROC-AUC, and persist the model plus reports."""
 	features, target = load_features_and_target(csv_path)
@@ -113,6 +136,7 @@ def train_and_save(csv_path: Path, models_dir: Path, reports_dir: Path, random_s
 		"test_rows": len(features_test),
 	}
 	(reports_dir / "model_metrics.json").write_text(json.dumps(metrics_report, indent=2))
+	log_experiment(reports_dir, metrics_report)
 
 	return metrics_report
 

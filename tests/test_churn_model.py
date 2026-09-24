@@ -77,9 +77,25 @@ class ChurnModelTest(unittest.TestCase):
 			self.assertTrue((models_dir / "churn_model.joblib").exists())
 			self.assertTrue((reports_dir / "model_metrics.json").exists())
 			self.assertTrue((reports_dir / "confusion_matrix.csv").exists())
+			self.assertTrue((reports_dir / "experiment_log.csv").exists())
 			for metrics in report["models"].values():
 				self.assertGreaterEqual(metrics["roc_auc"], 0.0)
 				self.assertLessEqual(metrics["roc_auc"], 1.0)
+
+	def test_repeated_training_appends_to_experiment_log(self) -> None:
+		with TemporaryDirectory() as tmp_dir:
+			tmp_path = Path(tmp_dir)
+			csv_path = tmp_path / "raw.csv"
+			models_dir = tmp_path / "models"
+			reports_dir = tmp_path / "reports"
+			_make_synthetic_telco_csv(csv_path, rows=120)
+
+			train_and_save(csv_path, models_dir, reports_dir)
+			train_and_save(csv_path, models_dir, reports_dir)
+
+			log = pd.read_csv(reports_dir / "experiment_log.csv")
+			self.assertEqual(4, len(log))
+			self.assertEqual({"logistic_regression", "random_forest"}, set(log["model"].unique()))
 
 	def test_predict_churn_probability_returns_values_in_range(self) -> None:
 		with TemporaryDirectory() as tmp_dir:
